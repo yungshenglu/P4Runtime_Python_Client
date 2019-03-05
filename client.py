@@ -77,6 +77,13 @@ def main():
     parser.add_argument('--skip-config',
                         help='Assume a device with pipeline already configured',
                         action="store_true", default=False)
+    # BEG - David: Add a command for start Intel NCSDK
+    parser.add_argument('--ncsdk',
+                        help='Start Intel NCSDK'
+                        action=bool,
+                        required=True,
+                        default=False)
+    # END - David: Add a command for start Intel NCSDK
     args, unknown_args = parser.parse_known_args()
 
     # device = args.device
@@ -88,36 +95,41 @@ def main():
     # grpc_port = args.grpc_addr.split(':')[1]
 
     try:
-	print "Try to connect to P4Runtime Server"
+        # BEG - David: Start Intel NCSDK
+        print "Try to connect to Intel Movidius NCS"
+        MVNCRuntimeClient()
+        # END - David: Start Intel NCSDK
+        
+	    print "Try to connect to P4Runtime Server"
         s1 = P4RuntimeClient(grpc_addr = args.grpc_addr, device_id = args.device_id, cpu_port = args.cpu_port, p4info_path = args.p4info)
-	was_packetin = 0
-	wrote = 0
-	while 1:
-		packetin = s1.get_packet_in()
-		if was_packetin and not packetin and not wrote:
-			# Set flow rule to tableNCS
-            		print "Insert entry"
-            		req = s1.get_new_write_request()
-            		s1.push_update_add_entry_to_action(
-            		    req,
-            		    "ingress.tableNCS_control.tableNCS",
-            		    [s1.Ternary("hdr.ipv4.protocol", '\x01', '\xff')],
-            		    #"_drop", [], 70000)
-            		    "tableNCS_control.set_egress_port", [("port", b'\x00\x03')], 100)
-            		s1.write_request(req)
-			wrote = 1			
-		was_packetin = 0
-		if packetin:
-			was_packetin = 1
-			# Print Packet from CPU_PORT of Switch
-			print " ".join("{:02x}".format(ord(c)) for c in packetin.payload)
-			
-			# Print metadatas:
-			# 	1. packet_in switch port (9 bits)
-			#	2. padding (7 bits)
-			for metadata_ in packetin.metadata:
-				print " ".join("{:02x}".format(ord(c)) for c in metadata_.value)
-		time.sleep(1)
+        was_packetin = 0
+        wrote = 0
+        while 1:
+            packetin = s1.get_packet_in()
+            if was_packetin and not packetin and not wrote:
+                # Set flow rule to tableNCS
+                        print "Insert entry"
+                        req = s1.get_new_write_request()
+                        s1.push_update_add_entry_to_action(
+                            req,
+                            "ingress.tableNCS_control.tableNCS",
+                            [s1.Ternary("hdr.ipv4.protocol", '\x01', '\xff')],
+                            #"_drop", [], 70000)
+                            "tableNCS_control.set_egress_port", [("port", b'\x00\x03')], 100)
+                        s1.write_request(req)
+                wrote = 1			
+            was_packetin = 0
+            if packetin:
+                was_packetin = 1
+                # Print Packet from CPU_PORT of Switch
+                print " ".join("{:02x}".format(ord(c)) for c in packetin.payload)
+                
+                # Print metadatas:
+                # 	1. packet_in switch port (9 bits)
+                #	2. padding (7 bits)
+                for metadata_ in packetin.metadata:
+                    print " ".join("{:02x}".format(ord(c)) for c in metadata_.value)
+            time.sleep(1)
 
     except Exception:
         raise
