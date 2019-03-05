@@ -77,13 +77,6 @@ def main():
     parser.add_argument('--skip-config',
                         help='Assume a device with pipeline already configured',
                         action="store_true", default=False)
-    # BEG - David: Add a command for start Intel NCSDK
-    parser.add_argument('--ncsdk',
-                        help='Start Intel NCSDK'
-                        action=bool,
-                        required=True,
-                        default=False)
-    # END - David: Add a command for start Intel NCSDK
     args, unknown_args = parser.parse_known_args()
 
     # device = args.device
@@ -95,12 +88,7 @@ def main():
     # grpc_port = args.grpc_addr.split(':')[1]
 
     try:
-        # BEG - David: Start Intel NCSDK
-        print "Try to connect to Intel Movidius NCS"
-        MVNCRuntimeClient()
-        # END - David: Start Intel NCSDK
-        
-	    print "Try to connect to P4Runtime Server"
+        print "Try to connect to P4Runtime Server"
         s1 = P4RuntimeClient(grpc_addr = args.grpc_addr, device_id = args.device_id, cpu_port = args.cpu_port, p4info_path = args.p4info)
         was_packetin = 0
         wrote = 0

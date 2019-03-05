@@ -35,7 +35,6 @@ from google.rpc import status_pb2, code_pb2
 from p4.config.v1 import p4info_pb2
 from p4.v1 import p4runtime_pb2
 
-import mvnc.mcncapi as fx
 
 # See https://gist.github.com/carymrobbins/8940382
 # functools.partialmethod is introduced in Python 3.4
@@ -419,41 +418,6 @@ class P4RuntimeClient():
 	#    raise P4RuntimeWriteException(e)
 
     # --- Table End ---
-
-
-# BEG - David: Intel Movidius NCS
-class MVNCRuntimeClient():
-    def __init__(self):
-        # Set the logging level for the NC API
-        fx.global_set_option(fx.GlobalOption.RW_LOG_LEVEL, 0)
-
-        # Get a list of names for all the devices plugged into the system
-        devices = fx.enumerate_devices()
-        if (len(devices) < 1):
-            print("ERROR: No NCS devices detected, verify an NCS device is connected.")
-            quit() 
-
-        # Get the first NCS device by its name
-        # For this program we will always open the first NCS device
-        dev = fx.Device(devices[0])
-
-        # Try to open the device
-        # This will throw an exception if someone else has it open already
-        try:
-            dev.open()
-        except:
-            print("ERROR: Could not open NCS device.")
-            quit()
-        print("INFO: Hello world, NCS! Device opened normally.")
-        
-        try:
-            dev.close()
-        except:
-            print("ERROR: could not close NCS device.")
-            quit()
-        print("INFO: Goodbye NCS! Device closed normally.")
-        print("INFO: NCS device working.")
-# END - David: Intel Movidius NCS
 
 
 # Add p4info object and object id "getters" for each object type; these are just
